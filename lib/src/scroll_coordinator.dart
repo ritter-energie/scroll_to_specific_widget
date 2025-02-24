@@ -67,6 +67,12 @@ class ScrollCoordinator<K> {
     }
   }
 
+  Map<K, Option<ScrollCandidate>> getRegisteredCandidates() {
+    return _scrollCandidateCallbackRegistrations.map(
+      (key, candidateCallback) => MapEntry(key, candidateCallback()),
+    );
+  }
+
   StreamSubscription<ScrollCandidate> listen(
     void Function(ScrollCandidate)? onData, {
     Function? onError,
@@ -89,6 +95,14 @@ class ScrollCoordinator<K> {
     if (candidateSelectorDelegate.selectCandidate(candidates)
         case Some(value: final candidate)) {
       _streamController.add(candidate);
+    }
+  }
+
+  void scrollToCandidate(K candidateKey) {
+    final candidateOption =
+        _scrollCandidateCallbackRegistrations[candidateKey]?.call();
+    if (candidateOption is Some<ScrollCandidate>) {
+      _streamController.add(candidateOption.value);
     }
   }
 

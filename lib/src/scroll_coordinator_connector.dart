@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:outcome_types/outcome_types.dart';
 import 'package:provider/provider.dart';
 import 'package:scroll_to_specific_widget/src/scroll_candidate.dart';
 import 'package:scroll_to_specific_widget/src/scroll_candidate_selector_delegate.dart';
@@ -20,6 +21,7 @@ class ScrollCoordinatorConnector<K> extends StatefulWidget {
     required this.child,
     this.scrollAnimationCurve,
     this.scrollAnimationDuration,
+    this.onSectionChanged,
     super.key,
   });
 
@@ -31,6 +33,8 @@ class ScrollCoordinatorConnector<K> extends StatefulWidget {
 
   final Duration? scrollAnimationDuration;
   final Curve? scrollAnimationCurve;
+
+  final void Function(K activeSection)? onSectionChanged;
 
   @override
   State<ScrollCoordinatorConnector<K>> createState() =>
@@ -52,12 +56,36 @@ class _ScrollCoordinatorConnectorState<K>
   void initState() {
     super.initState();
     _scrollCoordinator.listen(_scrollCoordinatorListener);
+    widget.scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    widget.scrollController.removeListener(_onScroll);
     _scrollCoordinator.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final currentOffset = _scrollController.position.pixels;
+    final candidates = _scrollCoordinator.getRegisteredCandidates();
+    K? closestCandidate;
+    var minDiff = double.infinity;
+
+    candidates.forEach((key, candidateOption) {
+      if (candidateOption is Some<ScrollCandidate>) {
+        final candidate = candidateOption.value;
+        final diff = (candidate.scrollOffset - currentOffset).abs();
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestCandidate = key;
+        }
+      }
+    });
+
+    if (closestCandidate != null && widget.onSectionChanged != null) {
+      widget.onSectionChanged!(closestCandidate!);
+    }
   }
 
   Future<void> _scrollCoordinatorListener(

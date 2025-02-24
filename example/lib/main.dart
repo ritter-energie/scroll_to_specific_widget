@@ -113,7 +113,7 @@ class _CandidateSelectorDelegate
 }
 
 class Example extends StatefulWidget {
-  const Example();
+  const Example({super.key});
 
   @override
   State<Example> createState() => _ExampleState();
@@ -150,31 +150,83 @@ class _ExampleState extends State<Example> {
     return MaterialApp(
       builder: (_, __) => Builder(
         builder: (context) {
-          return ScrollCoordinatorConnector(
-            scrollController: _scrollController,
-            candidateSelectorDelegate: _candidateSelectorDelegate,
-            child: Builder(
-              builder: (context) {
-                return ListView(
-                  controller: _scrollController,
-                  children: [
-                    const _CategoryA(),
-                    const SizedBox(height: 8),
-                    const _CategoryB(),
-                    const SizedBox(height: 8),
-                    const _CategoryC(),
-                    const SizedBox(height: 8),
-                    const _CategoryD(),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () => context
-                          .read<ScrollCoordinator<Category>>()
-                          .triggerScroll(),
-                      child: const Text('What did I miss?'),
+          return ChangeNotifierProvider(
+            create: (_) => ActiveSectionNotifier<Category>(Category.A),
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('Scroll to Specific Widget Example'),
+              ),
+              // Dentro del Scaffold:
+              body: Builder(
+                builder: (context) {
+                  return ScrollCoordinatorConnector<Category>(
+                    scrollController: _scrollController,
+                    candidateSelectorDelegate: _candidateSelectorDelegate,
+                    onSectionChanged: (activeSection) {
+                      context
+                          .read<ActiveSectionNotifier<Category>>()
+                          .updateActiveSection(activeSection);
+                    },
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 100,
+                          child: Consumer<ActiveSectionNotifier<Category>>(
+                            builder: (context, activeTabNotifier, _) {
+                              return ListView(
+                                children: Category.values.map((category) {
+                                  return ListTile(
+                                    title: Text(
+                                      category.toString().split('.').last,
+                                    ),
+                                    tileColor:
+                                        activeTabNotifier.activeSection ==
+                                                category
+                                            ? Colors.green
+                                            : Colors.blue,
+                                    onTap: () {
+                                      activeTabNotifier
+                                          .updateActiveSection(category);
+                                      // context
+                                      //     .read<ScrollCoordinator<Category>>()
+                                      //     .triggerScroll();
+                                      context
+                                          .read<ScrollCoordinator<Category>>()
+                                          .scrollToCandidate(category);
+                                    },
+                                  );
+                                }).toList(),
+                              );
+                            },
+                          ),
+                        ),
+                        // Contenido scrollable
+                        Expanded(
+                          child: ListView(
+                            controller: _scrollController,
+                            children: [
+                              const _CategoryA(),
+                              const SizedBox(height: 8),
+                              const _CategoryB(),
+                              const SizedBox(height: 8),
+                              const _CategoryC(),
+                              const SizedBox(height: 8),
+                              const _CategoryD(),
+                              const SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: () => context
+                                    .read<ScrollCoordinator<Category>>()
+                                    .triggerScroll(),
+                                child: const Text('What did I miss?'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                );
-              },
+                  );
+                },
+              ),
             ),
           );
         },
