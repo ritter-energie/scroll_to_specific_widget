@@ -18,8 +18,8 @@ import 'package:scroll_to_specific_widget/src/scroll_coordinator.dart';
 class ScrollCoordinatorConnector<K> extends StatefulWidget {
   const ScrollCoordinatorConnector({
     required this.scrollController,
-    required this.candidateSelectorDelegate,
     required this.child,
+    this.candidateSelectorDelegate,
     this.scrollAnimationCurve,
     this.scrollAnimationDuration,
     this.onSectionChanged,
