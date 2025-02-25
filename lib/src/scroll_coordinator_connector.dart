@@ -30,7 +30,7 @@ class ScrollCoordinatorConnector<K> extends StatefulWidget {
 
   final ScrollController scrollController;
 
-  final ScrollCandidateSelectorDelegate<K> candidateSelectorDelegate;
+  final ScrollCandidateSelectorDelegate<K>? candidateSelectorDelegate;
 
   final Widget child;
 
@@ -57,8 +57,12 @@ class _ScrollCoordinatorConnectorState<K>
       widget.defaultActiveSectionNotifier ??
           ActiveSectionNotifier<K>(widget.initialActiveSection as K);
 
+  /// If the user did not pass a candidateSelectorDelegate, we use the default
+  late final ScrollCandidateSelectorDelegate<K> _selectorDelegate =
+      widget.candidateSelectorDelegate ?? DefaultScrollCandidateSelector<K>();
+
   late final _scrollCoordinator = ScrollCoordinator<K>(
-    candidateSelectorDelegate: widget.candidateSelectorDelegate,
+    candidateSelectorDelegate: _selectorDelegate,
   );
   ScrollController get _scrollController => widget.scrollController;
 

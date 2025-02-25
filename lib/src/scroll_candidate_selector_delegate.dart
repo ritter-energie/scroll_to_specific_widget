@@ -13,3 +13,18 @@ abstract interface class ScrollCandidateSelectorDelegate<K> {
     Map<K, Option<ScrollCandidate>> registeredCandidates,
   );
 }
+
+class DefaultScrollCandidateSelector<K>
+    implements ScrollCandidateSelectorDelegate<K> {
+  Option<K> targetTab = const None();
+
+  @override
+  Option<ScrollCandidate> selectCandidate(
+    Map<K, Option<ScrollCandidate>> registeredCandidates,
+  ) =>
+      switch (targetTab) {
+        Some(value: final targetTab) =>
+          registeredCandidates[targetTab] ?? const None(),
+        None() => const None(),
+      };
+}
